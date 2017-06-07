@@ -100,9 +100,28 @@ class BuildscriptBlockExtractionTest {
         }
     }
 
+    @Test
+    fun `given buildscript member invocation with lambda it returns null`() {
+        assertNoBuildscript("project.buildscript {}")
+        assertNoBuildscript("(project.buildscript) {}")
+        assertNoBuildscript("project. buildscript {}")
+        assertNoBuildscript("project /* a comment */ . /* another comment */ buildscript {}")
+    }
+
+    @Test
+    fun `given buildscript identifier following an operation it returns null`() {
+        assertNoBuildscript("val a = buildscript {}")
+        assertNoBuildscript("if(42 > buildscript {}) println(\"foo\")")
+    }
+
+    @Test
+    fun `given backticks around buildscript block it returns null`() {
+        assertNoBuildscript("`buildscript` {}")
+    }
+
     private
     fun assertNoBuildscript(script: String) {
-        assertNull(extractBuildscriptBlockFrom(script))
+        assertNull("Expecting no `buildscript` block.", extractBuildscriptBlockFrom(script))
     }
 }
 

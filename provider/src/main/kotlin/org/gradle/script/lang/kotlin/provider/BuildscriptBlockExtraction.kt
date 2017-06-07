@@ -16,6 +16,7 @@
 
 package org.gradle.script.lang.kotlin.provider
 
+import org.jetbrains.kotlin.com.intellij.psi.tree.IElementType
 import org.jetbrains.kotlin.lexer.KotlinLexer
 import org.jetbrains.kotlin.lexer.KtTokens.*
 
@@ -87,16 +88,25 @@ fun KotlinLexer.skipWhiteSpaceAndComments() {
 
 
 private
+val previousSignificantTokenBlackList = OPERATIONS.types.filter { it != IDENTIFIER }
+
+
+private
 fun KotlinLexer.findTopLevelIdentifier(identifier: String): Int? {
     var depth: Int = 0
+    var previousSignificantToken: IElementType? = null
     while (tokenType != null) {
         when (tokenType) {
             IDENTIFIER ->
-                if (depth == 0 && tokenText == identifier) {
+                if (depth == 0 && tokenText == identifier
+                    && previousSignificantToken !in previousSignificantTokenBlackList) {
                     return tokenStart
                 }
             LBRACE -> depth += 1
             RBRACE -> depth -= 1
+        }
+        if(tokenType !in WHITE_SPACE_OR_COMMENT_BIT_SET) {
+            previousSignificantToken = tokenType
         }
         advance()
     }
