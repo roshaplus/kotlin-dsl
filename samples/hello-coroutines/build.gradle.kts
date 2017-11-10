@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.Coroutines
 
 plugins {
     application
-    kotlin("jvm") version "1.1.60"
+    kotlin("jvm") version "1.2.0-rc-39"
 }
 
 application {
