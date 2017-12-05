@@ -1,5 +1,7 @@
 package org.gradle.kotlin.dsl.accessors
 
+import org.gradle.api.Project
+
 import org.gradle.internal.classpath.ClassPath
 
 import org.hamcrest.CoreMatchers.equalTo
@@ -53,7 +55,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             ClassPath.EMPTY)
 
         assertThat(
-            projectSchema.extensions["buildScan"]!!,
+            projectSchema.extension("buildScan")!!.type,
             equalTo(inaccessible(typeString, nonAvailable(typeString))))
     }
 
@@ -67,7 +69,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             classPathWithPublicType(typeString))
 
         assertThat(
-            projectSchema.extensions["buildScan"]!!,
+            projectSchema.extension("buildScan")!!.type,
             equalTo(accessible(typeString)))
     }
 
@@ -81,7 +83,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             classPathWithPrivateType(typeString))
 
         assertThat(
-            projectSchema.extensions["buildScan"]!!,
+            projectSchema.extension("buildScan")!!.type,
             equalTo(inaccessible(typeString, nonPublic(typeString))))
     }
 
@@ -95,7 +97,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             classPathWithType(typeString, ACC_PUBLIC, ACC_SYNTHETIC))
 
         assertThat(
-            projectSchema.extensions["buildScan"]!!,
+            projectSchema.extension("buildScan")!!.type,
             equalTo(inaccessible(typeString, synthetic(typeString))))
     }
 
@@ -109,7 +111,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             classPathWith(PublicGenericType::class, PublicComponentType::class))
 
         assertThat(
-            projectSchema.extensions["generic"]!!,
+            projectSchema.extension("generic")!!.type,
             equalTo(accessible(genericTypeString)))
     }
 
@@ -123,7 +125,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             classPathWith(PublicGenericType::class, PrivateComponentType::class))
 
         assertThat(
-            projectSchema.extensions["generic"]!!,
+            projectSchema.extension("generic")!!.type,
             equalTo(inaccessible(genericTypeString, nonPublic(PrivateComponentType::class.qualifiedName!!))))
     }
 
@@ -137,7 +139,7 @@ class ProjectSchemaTest : TestWithClassPath() {
             classPathWith(PublicGenericType::class))
 
         assertThat(
-            projectSchema.extensions["generic"]!!,
+            projectSchema.extension("generic")!!.type,
             equalTo(inaccessible(genericTypeString, nonAvailable(PublicComponentType::class.qualifiedName!!))))
     }
 
@@ -151,14 +153,18 @@ class ProjectSchemaTest : TestWithClassPath() {
             jarClassPathWith(PublicGenericType::class, PublicComponentType::class))
 
         assertThat(
-            projectSchema.extensions["generic"]!!,
+            projectSchema.extension("generic")!!.type,
             equalTo(accessible(genericTypeString)))
     }
 
     private
     fun schemaWithExtensions(vararg pairs: Pair<String, String>) =
         ProjectSchema(
-            extensions = mapOf(*pairs),
-            conventions = emptyMap(),
+            extensions = pairs.map { ProjectSchemaEntry(Project::class.java.name!!, it.first, it.second) },
+            conventions = emptyList(),
             configurations = emptyList())
+
+    private
+    fun <T> ProjectSchema<T>.extension(name: String) =
+        extensions.firstOrNull { it.name == name }
 }
