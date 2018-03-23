@@ -16,6 +16,8 @@
 package org.gradle.kotlin.dsl
 
 import org.gradle.api.Task
+
+import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.tasks.TaskContainer
 
 
@@ -26,3 +28,45 @@ import org.gradle.api.tasks.TaskContainer
 inline
 fun <reified T : Task> TaskContainer.create(name: String, vararg arguments: Any) =
     create(name, T::class.java, *arguments)
+
+
+/**
+ * Looks for the task of a given name, casts it to the expected type [T]
+ * then applies the given [configure] action.
+ *
+ * If none found it will throw an [UnknownDomainObjectException].
+ * If the task is found but cannot be cast to the expected type it will throw an [IllegalStateException].
+ *
+ * @param name task name
+ * @return task, never null
+ * @throws [UnknownDomainObjectException] When the given task is not found.
+ * @throws [IllegalStateException] When the given task cannot be cast to the expected type.
+ */
+@Suppress("extension_shadowed_by_member")
+inline
+fun <reified T : Any> TaskContainer.getByName(name: String, configure: T.() -> Unit = {}): T =
+    getByName(name).let {
+        (it as? T)?.also(configure)
+            ?: throw IllegalStateException(
+                "Element '$name' of type '${it::class.java.name}' from container '$this' cannot be cast to '${T::class.qualifiedName}'.")
+    }
+
+
+/**
+ * Looks for the task of a given name and, if it exists, casts it to the expected type [T].
+ *
+ * If none found it will return `null`
+ * If the task is found but cannot be cast to the expected type it will throw an [IllegalStateException].
+ *
+ * @param name task name
+ * @return task, or null if not found null
+ * @throws [IllegalStateException] When the given task cannot be cast to the expected type.
+ */
+@Suppress("extension_shadowed_by_member")
+inline
+fun <reified T : Any> TaskContainer.findByName(name: String): T? =
+    findByName(name)?.let {
+        it as? T
+            ?: throw IllegalStateException(
+                "Element '$name' of type '${it::class.java.name}' from container '$this' cannot be cast to '${T::class.qualifiedName}'.")
+    }
