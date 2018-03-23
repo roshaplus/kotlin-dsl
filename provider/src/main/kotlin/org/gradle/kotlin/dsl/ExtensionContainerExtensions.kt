@@ -56,6 +56,17 @@ fun <reified T : Any> ExtensionContainer.getByName(name: String) =
     }
 
 
+/**
+ * Creates and adds a new extension to this container.
+ *
+ * @see [ExtensionContainer.create]
+ * @param T the public extension instance type
+ */
+inline
+fun <reified T : Any> ExtensionContainer.create(name: String, vararg constructionArguments: Any?): T =
+    create(typeOf<T>(), name, T::class.java, *constructionArguments)
+
+
 inline
 operator fun <reified T : Any> ExtensionContainer.getValue(thisRef: Any?, property: KProperty<*>): T =
     getByName<T>(property.name)

@@ -1,6 +1,7 @@
 package org.gradle.kotlin.dsl
 
 import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.inOrder
 import com.nhaarman.mockito_kotlin.mock
@@ -92,6 +93,25 @@ class ExtensionAwareExtensionsTest {
 
         inOrder(extensions) {
             verify(extensions).configure(eq(extensionType), any<Action<NamedDomainObjectContainer<List<String>>>>())
+            verifyNoMoreInteractions()
+        }
+    }
+
+    interface Something
+
+    @Test
+    fun `can create extensions`() {
+        val extensionContainer = mock<ExtensionContainer>()
+        val extension = mock<Something>()
+        val extensionType = typeOf<Something>()
+
+        whenever(extensionContainer.create(extensionType, "name", Something::class.java, "and", "args"))
+            .doReturn(extension)
+
+        extensionContainer.create<Something>("name", "and", "args")
+
+        inOrder(extensionContainer) {
+            verify(extensionContainer).create(extensionType, "name", Something::class.java, "and", "args")
             verifyNoMoreInteractions()
         }
     }
